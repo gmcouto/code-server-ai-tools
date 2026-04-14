@@ -10,6 +10,8 @@ installs the following AI CLI tools on every container start:
 | [claude-code](https://github.com/anthropics/claude-code) | `@anthropic-ai/claude-code` | Anthropic Claude agentic coding CLI |
 | [openclaude](https://github.com/Gitlawb/openclaude) | `@gitlawb/openclaude` | Open-source Claude-compatible coding agent CLI |
 | [cursor CLI](https://cursor.com/docs/cli/installation) | official installer | Cursor editor CLI (`cursor` command) |
+| [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `@github/copilot` | GitHub Copilot in your terminal (`copilot` command) |
+| [OpenAI Codex CLI](https://github.com/openai/codex) | `@openai/codex` | OpenAI Codex local coding agent (`codex` command) |
 
 > **Prerequisites** – this mod relies on Node.js/npm being available at container startup.
 > Use it alongside the **`linuxserver/mods:code-server-nodejs`** or **`linuxserver/mods:code-server-nvm`** mod.

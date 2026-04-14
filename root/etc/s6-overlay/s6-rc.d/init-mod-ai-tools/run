@@ -39,6 +39,18 @@ else
     # -----------------------------------------------------------------------
     echo "**** installing / updating openclaude ****"
     ${NPM_BIN} install -g @gitlawb/openclaude
+
+    # -----------------------------------------------------------------------
+    # github-copilot-cli  (https://github.com/github/copilot-cli)
+    # -----------------------------------------------------------------------
+    echo "**** installing / updating github copilot CLI ****"
+    ${NPM_BIN} install -g @github/copilot
+
+    # -----------------------------------------------------------------------
+    # codex CLI  (https://github.com/openai/codex)
+    # -----------------------------------------------------------------------
+    echo "**** installing / updating openai codex CLI ****"
+    ${NPM_BIN} install -g @openai/codex
 fi
 
 # ---------------------------------------------------------------------------
