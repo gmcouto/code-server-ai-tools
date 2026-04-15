@@ -3,69 +3,40 @@ name: Build Image
 on:
   push:
     branches:
-      - 'code-server-ai-tools'
-  pull_request_target:
+      - '**'
+    tags:
+      - 'v*'
+  pull_request:
   workflow_dispatch:
-    inputs:
-      mod_version:
-        type: string
-        required: false
 
 env:
-  GITHUB_REPO: "gmcouto/code-server-ai-tools" #don't modify
-  ENDPOINT: "gmcouto/gmcouto-code-server-docker-mods" #replace with your user/endpoint
-  BASEIMAGE: "code-server" #replace
-  MODNAME: "ai-tools" #replace
-  MOD_VERSION: ${{ inputs.mod_version }} #don't modify
-  MULTI_ARCH: "false" #set to false if not needed
+  IMAGE: ghcr.io/gmcouto/code-server-ai-tools
 
 jobs:
-  set-vars:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    steps:
-      - name: Set Vars
-        id: outputs
-        run: |
-          echo "GITHUB_REPO=${{ env.GITHUB_REPO }}" >> $GITHUB_OUTPUT
-          echo "ENDPOINT=${{ env.ENDPOINT }}" >> $GITHUB_OUTPUT
-          echo "BASEIMAGE=${{ env.BASEIMAGE }}" >> $GITHUB_OUTPUT
-          echo "MODNAME=${{ env.MODNAME }}" >> $GITHUB_OUTPUT
-          echo "MULTI_ARCH=${{ env.MULTI_ARCH }}" >> $GITHUB_OUTPUT
-          if [[ -z "${{ env.MOD_VERSION }}" ]]; then
-            # **** If the mod needs to be versioned, set the versioning logic below. Otherwise leave as is. ****
-            MOD_VERSION=""
-          else
-            MOD_VERSION=${{ env.MOD_VERSION }}
-            echo "MOD_VERSION_OVERRIDE=true" >> $GITHUB_OUTPUT
-          fi
-          echo "MOD_VERSION=${MOD_VERSION}" >> $GITHUB_OUTPUT
-    outputs:
-      GITHUB_REPO: ${{ steps.outputs.outputs.GITHUB_REPO }}
-      ENDPOINT: ${{ steps.outputs.outputs.ENDPOINT }}
-      BASEIMAGE: ${{ steps.outputs.outputs.BASEIMAGE }}
-      MODNAME: ${{ steps.outputs.outputs.MODNAME }}
-      MULTI_ARCH: ${{ steps.outputs.outputs.MULTI_ARCH }}
-      MOD_VERSION: ${{ steps.outputs.outputs.MOD_VERSION }}
-      MOD_VERSION_OVERRIDE: ${{ steps.outputs.outputs.MOD_VERSION_OVERRIDE }}
-
-  build:
-    uses: linuxserver/github-workflows/.github/workflows/docker-mod-builder.yml@v1
-    needs: set-vars
-    permissions:
-      contents: read
       packages: write
-    secrets:
-      CR_USER: ${{ secrets.CR_USER }}
-      CR_PAT: ${{ secrets.CR_PAT }}
-      DOCKERUSER: ${{ secrets.DOCKERUSER }}
-      DOCKERPASS: ${{ secrets.DOCKERPASS }}
-    with:
-      GITHUB_REPO: ${{ needs.set-vars.outputs.GITHUB_REPO }}
-      ENDPOINT: ${{ needs.set-vars.outputs.ENDPOINT }}
-      BASEIMAGE: ${{ needs.set-vars.outputs.BASEIMAGE }}
-      MODNAME: ${{ needs.set-vars.outputs.MODNAME }}
-      MULTI_ARCH: ${{ needs.set-vars.outputs.MULTI_ARCH }}
-      MOD_VERSION: ${{ needs.set-vars.outputs.MOD_VERSION }}
-      MOD_VERSION_OVERRIDE: ${{ needs.set-vars.outputs.MOD_VERSION_OVERRIDE }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build --no-cache -t ${{ env.IMAGE }}:${{ github.sha }} .
+
+      - name: Log in to GitHub Container Registry
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Tag and push release image
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          docker tag ${{ env.IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}:${TAG}
+          docker tag ${{ env.IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}:latest
+          docker push ${{ env.IMAGE }}:${TAG}
+          docker push ${{ env.IMAGE }}:latest
+          printf "\n## Pushed the following images to GHCR:\n\n" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ env.IMAGE }}:${TAG}\`" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ env.IMAGE }}:latest\`" >> $GITHUB_STEP_SUMMARY
