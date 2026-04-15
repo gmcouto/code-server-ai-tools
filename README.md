@@ -78,7 +78,7 @@ set-option -g default-shell /bin/bash
 ```
 
 ## Stop Copilot Chat extension from nagging you
-Run this in the browser console with `code-server` tab open, then restart the page:
+Using copilot-chat extension, login to github. Then run this in the browser console with `code-server` tab open, then restart the page, so the copilot-chat consider itself properly setup:
 ```js
   (async () => {
     const DB_NAME = 'vscode-web-state-db-global';
