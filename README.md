@@ -28,7 +28,7 @@ installs the following tools on every container start:
 
 ## Usage
 
-Just add the image of this repo `ghcr.io/gmcouto/code-server-ai-tools:latest` to the `DOCKER_MODS` of your container environment variable. You can do it either on to your `docker run` or `docker-compose.yml`:
+Just add this repo's image, `ghcr.io/gmcouto/code-server-ai-tools:latest`, to your container's `DOCKER_MODS` environment variable. You can do this either in your `docker run` command or in `docker-compose.yml`:
 
 ### docker run
 
