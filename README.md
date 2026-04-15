@@ -65,19 +65,23 @@ services:
 ```
 
 
-## My personal DOCKER_MODS value:
+## Suggestion for DOCKER_MODS value:
 ```
 DOCKER_MODS=linuxserver/mods:code-server-nodejs|linuxserver/mods:code-server-nvm|linuxserver/mods:universal-docker|linuxserver/mods:code-server-python3|ghcr.io/gmcouto/code-server-ai-tools:latest
 ```
 
+## Setup
+The following sections will help you get the most of your `code-server` instance...
 
-## Tmux Support in code-server
+### 1. Tmux Support in code-server
 Add the following to your `~/.tmux.conf` so tmux command works as expected:
 ```bash
 set-option -g default-shell /bin/bash
 ```
 
-## Stop Copilot Chat extension from nagging you
+Then install `tmux-integrated` extension.
+
+### 2. Stop Copilot Chat extension from nagging you
 Using copilot-chat extension, login to github. Then run this in the browser console with `code-server` tab open, then restart the page, so the copilot-chat consider itself properly setup:
 ```js
   (async () => {
