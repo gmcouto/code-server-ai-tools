@@ -12,7 +12,7 @@ on:
         required: false
 
 env:
-  GITHUB_REPO: "gmcouto/gmcouto-code-server-docker-mods" #don't modify
+  GITHUB_REPO: "gmcouto/code-server-ai-tools" #don't modify
   ENDPOINT: "gmcouto/gmcouto-code-server-docker-mods" #replace with your user/endpoint
   BASEIMAGE: "code-server" #replace
   MODNAME: "ai-tools" #replace
