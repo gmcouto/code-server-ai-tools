@@ -1,0 +1,9 @@
+# Claude Code local session files
+.claude/
+
+# Local diagnostic output (captured from running containers)
+diagnose/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
