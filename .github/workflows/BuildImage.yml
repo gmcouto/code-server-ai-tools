@@ -17,15 +17,14 @@ env:
   IMAGE: ghcr.io/gmcouto/code-server-ai-tools
 
 jobs:
+  # Builds the published artifact (FROM scratch mod image) and pushes a
+  # sha-tagged image to GHCR so the publish job can retag it on release.
+  # Skips the push for fork PRs (no write access to the repo's GHCR namespace).
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-      actions: write
-    # Push the sha-tagged image to GHCR on every non-fork run so the validate
-    # job can pull it via the linuxserver mod-init system (which only supports
-    # ghcr.io / lscr.io / Docker Hub — local registries are not supported).
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -34,7 +33,6 @@ jobs:
         run: docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
 
       - name: Log in to GitHub Container Registry
-        # Skip for fork PRs — they cannot push to the repo's GHCR namespace
         if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
         run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
@@ -42,31 +40,31 @@ jobs:
         if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
         run: docker push ${{ env.IMAGE }}:${{ github.sha }}
 
+  # Builds the mod image locally, bakes it into a combined test image, and
+  # runs the full integration checks — no GHCR push required, runs for all
+  # PRs including forks.
   validate:
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Only runs when a sha-tagged image was pushed to GHCR (i.e. non-fork runs)
-    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
     permissions:
       contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Run mod integration validation
-        # IMAGE_TAG is the sha of the commit; the mod-init system will pull
-        # gmcouto/code-server-ai-tools:<sha> from ghcr.io automatically.
-        run: IMAGE_TAG=${{ github.sha }} ./scripts/validate-mods.sh
+      - name: Run local mod integration validation
+        run: ./scripts/validate-mods-local.sh
 
       - name: Upload container log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: container-startup-log
-          path: /tmp/container-startup.log
+          path: /tmp/container-startup-local.log
           retention-days: 7
 
+  # Retags the sha-tagged image built by the build job as a versioned release.
+  # Runs only on version tags, and only after both build and validate pass.
   publish:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [build, validate]
