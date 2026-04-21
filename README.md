@@ -78,6 +78,7 @@ The following sections will help you get the most of your `code-server` instance
 Add the following to your `~/.tmux.conf` so tmux command works as expected:
 ```bash
 set-option -g default-shell /bin/bash
+set -g mouse on
 ```
 
 Then install `tmux-integrated` extension.
