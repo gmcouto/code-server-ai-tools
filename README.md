@@ -12,6 +12,7 @@ installs the following tools on every container start:
 | [fd](https://github.com/sharkdp/fd) | `apt` (`fd-find`) | Fast and user-friendly alternative to `find` (use alias fd=fdfind)|
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | `apt` (`ripgrep`) | Fast recursive text search (`rg`) |
 | [fzf](https://github.com/junegunn/fzf) | `apt` (`fzf`) | General-purpose fuzzy finder for the terminal |
+| [gh](https://cli.github.com/) | `apt` (`gh`, GitHub CLI repo) | GitHub's official CLI for PRs, issues, and repos (`gh` command). AI agents can use it without skills or mcp. |
 
 ### AI CLI tools
 

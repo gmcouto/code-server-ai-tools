@@ -1,0 +1,20 @@
+#!/usr/bin/with-contenv bash
+
+echo "**** Adding additional apt repositories for AI tools ****"
+
+# ---------------------------------------------------------------------------
+# GitHub CLI apt repository
+# https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+# ---------------------------------------------------------------------------
+echo "**** Adding GitHub CLI apt repository ****"
+mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+echo "**** Registering packages from additional repositories ****"
+echo "gh" >> /mod-repo-packages-to-install.list
+
+echo "**** Additional apt repositories setup complete ****"
