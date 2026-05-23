@@ -18,6 +18,7 @@ installs the following tools on every container start:
 | Tool | Package | Description |
 |---|---|---|
 | [gemini-cli](https://github.com/google-gemini/gemini-cli) | `@google/gemini-cli` | Google Gemini in your terminal |
+| [Antigravity CLI](https://antigravity.google) | official installer | Go-based multi-step agentic CLI (`agy` command) |
 | [claude-code](https://github.com/anthropics/claude-code) | `@anthropic-ai/claude-code` | Anthropic Claude agentic coding CLI |
 | [openclaude](https://github.com/Gitlawb/openclaude) | `@gitlawb/openclaude` | Open-source Claude-compatible coding agent CLI |
 | [Cursor Agent CLI](https://cursor.com/docs/cli/installation) | official installer | Cursor editor CLI (`cursor-agent` command) |
@@ -69,9 +70,12 @@ services:
 ```
 
 
-## Suggestion for DOCKER_MODS value:
+## Suggestion for ENVIRONMENT values:
 ```
-DOCKER_MODS=linuxserver/mods:code-server-nodejs|linuxserver/mods:code-server-nvm|linuxserver/mods:universal-docker|linuxserver/mods:code-server-python3|ghcr.io/gmcouto/code-server-ai-tools:latest
+DOCKER_MODS=linuxserver/mods:universal-package-install|linuxserver/mods:code-server-extension-arguments|linuxserver/mods:code-server-nodejs|linuxserver/mods:code-server-nvm|linuxserver/mods:universal-docker|linuxserver/mods:code-server-python3|linuxserver/mods:code-server-rust|linuxserver/mods:code-server-pnpm|linuxserver/mods:code-server-golang|ghcr.io/gmcouto/code-server-ai-tools:latest
+INSTALL_PACKAGES=pkg-config|libssl-dev|libglib2.0-dev|libgdk-pixbuf-2.0-dev|libpango1.0-dev|libatk1.0-dev|libgtk-3-dev|libjavascriptcoregtk-4.1-dev|libsoup-3.0-dev|libwebkit2gtk-4.1-dev
+EXTENSIONS_GALLERY='{"serviceUrl":"https://marketplace.visualstudio.com/_apis/public/gallery","cacheUrl":"https://vscode.blob.core.windows.net/gallery/index","itemUrl":"https://marketplace.visualstudio.com/items"}'
+NODEJS_MOD_VERSION=24
 ```
 
 ## Setup
@@ -86,7 +90,7 @@ set -g mouse on
 
 Then install `tmux-integrated` extension, if you want the UI to integrate to your CLI tools (not really necessary).
 
-### 2. Stop Copilot Chat extension from nagging you
+### 2. Stop Copilot Chat extension from nagging you (if you use free Marketplace)
 Using copilot-chat extension, login to github. Then run this in the browser console with `code-server` tab open, then restart the page, so the copilot-chat consider itself properly setup:
 ```js
   (async () => {

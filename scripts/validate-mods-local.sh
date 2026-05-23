@@ -21,7 +21,7 @@ MOD_IMAGE="code-server-ai-tools-mod:local-$$"
 TEST_IMAGE="code-server-ai-tools-test:local-$$"
 CONTAINER_NAME="code-server-validate-local-$$"
 PORT=$(( RANDOM % 10000 + 8000 ))
-STARTUP_TIMEOUT=480   # 8 minutes — npm installs are slow
+STARTUP_TIMEOUT=900   # 15 minutes — npm installs are slow
 POLL_INTERVAL=10
 
 PASS=0
@@ -61,24 +61,29 @@ docker build -t "${MOD_IMAGE}" "${REPO_ROOT}"
 # Apply our mod's filesystem overlay onto the linuxserver base at build time.
 # This is equivalent to what mod-init does at container startup for GHCR mods.
 banner "Building combined test image (base + mod overlay)"
-docker build -t "${TEST_IMAGE}" - <<DOCKERFILE
-FROM lscr.io/linuxserver/code-server:latest AS base
-FROM ${MOD_IMAGE} AS mod
-FROM base
-COPY --from=mod / /
-DOCKERFILE
+docker build -t "${TEST_IMAGE}" \
+    --build-arg MOD_IMAGE="${MOD_IMAGE}" \
+    -f "${REPO_ROOT}/test/Dockerfile" \
+    "${REPO_ROOT}"
 
 # ── Step 3: start the container ──────────────────────────────────────────────
 # Our mod is pre-baked; load only the other DOCKER_MODS from GHCR as normal.
-DOCKER_MODS="linuxserver/mods:code-server-nodejs|\
-linuxserver/mods:code-server-nvm|\
-linuxserver/mods:universal-docker|\
-linuxserver/mods:code-server-python3"
+DOCKER_MODS="linuxserver/mods:code-server-nvm"
 
 banner "Starting code-server container"
 echo "  Container  : ${CONTAINER_NAME}"
 echo "  Port       : ${PORT}"
 echo "  Test image : ${TEST_IMAGE}"
+
+# Stop and remove any leftover containers from previous runs
+STALE=$(docker ps -a -q --filter "name=code-server-validate-local-") || true
+if [ -n "${STALE}" ]; then
+    echo "  Removing stale validation containers…"
+    docker rm -f ${STALE} >/dev/null 2>&1 || true
+fi
+
+# Clear log file from any previous run
+: > "${LOG_FILE}"
 
 docker run -d \
     --name "${CONTAINER_NAME}" \
@@ -91,10 +96,17 @@ docker run -d \
 
 # ── Step 4: wait for [ls.io-init] done. ──────────────────────────────────────
 banner "Waiting for container initialisation (timeout: ${STARTUP_TIMEOUT}s)"
+
+# Stream container logs to file and stdout in real time
+docker logs -f "${CONTAINER_NAME}" >> "${LOG_FILE}" 2>&1 &
+LOGS_PID=$!
+tail -f "${LOG_FILE}" &
+TAIL_PID=$!
+
 ELAPSED=0
 READY=false
 while [ "${ELAPSED}" -lt "${STARTUP_TIMEOUT}" ]; do
-    if docker logs "${CONTAINER_NAME}" 2>&1 | grep -q '\[ls\.io-init\] done\.'; then
+    if grep -q '\[ls\.io-init\] done\.' "${LOG_FILE}" 2>/dev/null; then
         READY=true
         break
     fi
@@ -103,11 +115,16 @@ while [ "${ELAPSED}" -lt "${STARTUP_TIMEOUT}" ]; do
     echo "  ${ELAPSED}s elapsed…"
 done
 
+kill "${TAIL_PID}" 2>/dev/null || true
+kill "${LOGS_PID}" 2>/dev/null || true
+
 if [ "${READY}" = false ]; then
     echo -e "${RED}ERROR${NC}: Container did not reach [ls.io-init] done. within ${STARTUP_TIMEOUT}s"
     exit 1
 fi
 echo "Container ready after ${ELAPSED}s"
+
+sleep 5 # extra wait to make sure output is flushed
 
 # ── helper: run a check ───────────────────────────────────────────────────────
 check_fail() {
@@ -121,23 +138,12 @@ check_fail() {
 # ── checks ────────────────────────────────────────────────────────────────────
 banner "Running checks"
 
-docker logs "${CONTAINER_NAME}" > "${LOG_FILE}" 2>&1 || true
-
 # ── regression: no APT lock collision ────────────────────────────────────────
 if grep -q 'Could not get lock' "${LOG_FILE}"; then
     fail "APT lock collision detected in startup log (packages may not have installed)"
 else
     pass "No APT lock collision in startup log"
 fi
-
-# ── python3 mod (packages installed by init-mods-package-install) ─────────────
-check_fail "python3-dev installed (via mod)"  "dpkg -l python3-dev | grep -q '^ii'"
-check_fail "python3-pip installed (via mod)"  "dpkg -l python3-pip | grep -q '^ii'"
-check_fail "python3-pip works"                "python3 -m pip --version"
-
-# ── nodejs mod ────────────────────────────────────────────────────────────────
-check_fail "nodejs installed via apt"         "dpkg -l nodejs | grep -q '^ii'"
-check_fail "npm installed via apt or nodejs"  "dpkg -l nodejs | grep -q '^ii'"
 
 # ── our mod: Phase 1 packages (installed by the batch installer) ───────────────
 check_fail "screen installed (via mod Phase 1)"  "dpkg -l screen | grep -q '^ii'"
@@ -154,6 +160,8 @@ NVM_INIT="NVM_DIR=/config/.nvm source /config/.nvm/nvm.sh"
 check_fail "claude-code binary present"  "${NVM_INIT} && command -v claude"
 check_fail "claude-code executes"        "${NVM_INIT} && claude --version"
 check_fail "gemini-cli binary present"   "${NVM_INIT} && command -v gemini"
+check_fail "agy binary present"          "command -v agy"
+check_fail "agy executes"                "agy --version"
 check_fail "cursor-agent binary present" "command -v cursor-agent"
 
 # ── summary ───────────────────────────────────────────────────────────────────

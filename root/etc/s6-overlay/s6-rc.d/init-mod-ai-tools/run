@@ -85,4 +85,32 @@ else
     fi
 fi
 
+# ---------------------------------------------------------------------------
+# Antigravity CLI (https://antigravity.google)
+# The installer places agy in ~/.local/bin/
+# ---------------------------------------------------------------------------
+if command -v agy &>/dev/null; then
+    echo "**** Antigravity CLI (agy) already installed, skipping ****"
+else
+    echo "**** installing Antigravity CLI ****"
+    AGY_INSTALL_SCRIPT="$(mktemp /tmp/agy-install-XXXXXX.sh)"
+    if curl -fsSL -o "${AGY_INSTALL_SCRIPT}" https://antigravity.google/cli/install.sh; then
+        bash "${AGY_INSTALL_SCRIPT}"
+        rm -f "${AGY_INSTALL_SCRIPT}"
+        # The installer places binary under ~/.local/bin; symlink into PATH
+        AGY_LOCAL_BIN="${HOME}/.local/bin"
+        if [ -f "${AGY_LOCAL_BIN}/agy" ]; then
+            if ln -sf "${AGY_LOCAL_BIN}/agy" "/usr/local/bin/agy"; then
+                echo "**** agy symlinked to /usr/local/bin/agy ****"
+            else
+                echo "**** warning: could not create /usr/local/bin/agy symlink ****"
+                echo "**** agy binary is available at ${AGY_LOCAL_BIN}/agy ****"
+            fi
+        fi
+    else
+        rm -f "${AGY_INSTALL_SCRIPT}"
+        echo "**** Antigravity CLI installation failed – skipping ****"
+    fi
+fi
+
 echo "**** AI CLI tools installation complete ****"
