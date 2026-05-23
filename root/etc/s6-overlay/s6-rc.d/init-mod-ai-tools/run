@@ -113,4 +113,8 @@ else
     fi
 fi
 
+# The antigravity installer modifies ~/.bashrc and ~/.profile as root.
+# Restore ownership so the unprivileged container user can write to them.
+chown "${PUID}:${PGID}" "${HOME}/.bashrc" "${HOME}/.profile" 2>/dev/null || true
+
 echo "**** AI CLI tools installation complete ****"

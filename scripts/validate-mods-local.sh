@@ -21,12 +21,14 @@ MOD_IMAGE="code-server-ai-tools-mod:local-$$"
 TEST_IMAGE="code-server-ai-tools-test:local-$$"
 CONTAINER_NAME="code-server-validate-local-$$"
 PORT=$(( RANDOM % 10000 + 8000 ))
-STARTUP_TIMEOUT=900   # 15 minutes — npm installs are slow
+STARTUP_TIMEOUT=180   # 3 minutes — npm installs are slow
 POLL_INTERVAL=10
 
 PASS=0
 FAIL=0
 LOG_FILE="${LOG_FILE:-/tmp/container-startup-local.log}"
+LOGS_PID=""
+TAIL_PID=""
 
 # ── colour helpers ────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; NC='\033[0m'
@@ -36,15 +38,14 @@ banner(){ echo; echo "=== $* ==="; }
 
 # ── cleanup on exit ───────────────────────────────────────────────────────────
 cleanup() {
+    [ -n "${TAIL_PID}" ] && kill "${TAIL_PID}" 2>/dev/null || true
+    [ -n "${LOGS_PID}" ] && kill "${LOGS_PID}" 2>/dev/null || true
     banner "Cleanup"
     if docker ps -a -q --filter "name=${CONTAINER_NAME}" | grep -q .; then
         docker logs "${CONTAINER_NAME}" > "${LOG_FILE}" 2>&1 || true
         echo "Container startup log saved to: ${LOG_FILE}"
         if [ "${FAIL}" -gt 0 ]; then
-            echo "Failures detected — dumping last 80 lines of container log:"
-            echo "---"
-            tail -80 "${LOG_FILE}" || true
-            echo "---"
+            echo "Failures detected."
         fi
         docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
     fi
@@ -105,14 +106,16 @@ TAIL_PID=$!
 
 ELAPSED=0
 READY=false
+REQUIRED_IOINITS=1
 while [ "${ELAPSED}" -lt "${STARTUP_TIMEOUT}" ]; do
-    if grep -q '\[ls\.io-init\] done\.' "${LOG_FILE}" 2>/dev/null; then
+    COUNT=$(grep -c '\[ls\.io-init\] done\.' "${LOG_FILE}" 2>/dev/null || true)
+    if [ "${COUNT}" -ge "${REQUIRED_IOINITS}" ]; then
         READY=true
         break
     fi
     sleep "${POLL_INTERVAL}"
     ELAPSED=$(( ELAPSED + POLL_INTERVAL ))
-    echo "  ${ELAPSED}s elapsed…"
+    echo "  ${ELAPSED}s elapsed… (init done: ${COUNT}/${REQUIRED_IOINITS})"
 done
 
 kill "${TAIL_PID}" 2>/dev/null || true
@@ -124,7 +127,7 @@ if [ "${READY}" = false ]; then
 fi
 echo "Container ready after ${ELAPSED}s"
 
-sleep 5 # extra wait to make sure output is flushed
+sleep 5 # extra wait to make sure output is flushed and permissions are set after init
 
 # ── helper: run a check ───────────────────────────────────────────────────────
 check_fail() {
@@ -163,6 +166,30 @@ check_fail "gemini-cli binary present"   "${NVM_INIT} && command -v gemini"
 check_fail "agy binary present"          "command -v agy"
 check_fail "agy executes"                "agy --version"
 check_fail "cursor-agent binary present" "command -v cursor-agent"
+
+# ── home file ownership ───────────────────────────────────────────────────────
+# Installers that run as root (e.g. antigravity) can leave root-owned files
+# under /config, breaking code-server for the unprivileged PUID/PGID user.
+# /config is the home directory in this image (~/.bashrc → /config/.bashrc).
+banner "Checking ~/.bashrc and ~/.profile ownership"
+for homefile in /config/.bashrc /config/.profile; do
+    result=$(docker exec "${CONTAINER_NAME}" bash -c "
+        uid=\$(id -u abc 2>/dev/null || echo 1000)
+        gid=\$(id -g abc 2>/dev/null || echo 1000)
+        if [ ! -e '${homefile}' ]; then
+            echo missing
+        elif ! stat -c '%u %g' '${homefile}' | awk -v u=\"\${uid}\" -v g=\"\${gid}\" '\$1==u && \$2==g {exit 0} {exit 1}'; then
+            stat -c '%U:%G' '${homefile}'
+        fi
+    " 2>/dev/null || true)
+    if [ "${result}" = "missing" ]; then
+        fail "${homefile} does not exist"
+    elif [ -n "${result}" ]; then
+        fail "${homefile} owned by ${result}, expected PUID/PGID user"
+    else
+        pass "${homefile} owned by PUID/PGID user"
+    fi
+done
 
 # ── summary ───────────────────────────────────────────────────────────────────
 banner "Results"
