@@ -25,12 +25,6 @@ if [ -z "${NPM_BIN}" ]; then
     echo "**** skipping npm-based installations ****"
 else
     # -----------------------------------------------------------------------
-    # gemini-cli  (https://github.com/google-gemini/gemini-cli)
-    # -----------------------------------------------------------------------
-    echo "**** installing / updating gemini-cli ****"
-    ${NPM_BIN} install -g @google/gemini-cli
-
-    # -----------------------------------------------------------------------
     # claude-code  (https://github.com/anthropics/claude-code)
     # -----------------------------------------------------------------------
     echo "**** installing / updating claude-code ****"
@@ -113,8 +107,40 @@ else
     fi
 fi
 
-# The antigravity installer modifies ~/.bashrc and ~/.profile as root.
+# ---------------------------------------------------------------------------
+# Herdr / hrdr (https://herdr.dev)
+# The installer places herdr in ~/.local/bin/
+# ---------------------------------------------------------------------------
+if command -v herdr &>/dev/null; then
+    echo "**** Herdr (herdr) already installed, skipping ****"
+else
+    echo "**** installing Herdr ****"
+    HERDR_INSTALL_SCRIPT="$(mktemp /tmp/herdr-install-XXXXXX.sh)"
+    if curl -fsSL -o "${HERDR_INSTALL_SCRIPT}" https://herdr.dev/install.sh; then
+        sh "${HERDR_INSTALL_SCRIPT}"
+        rm -f "${HERDR_INSTALL_SCRIPT}"
+        # The installer places binary under ~/.local/bin; symlink into PATH
+        HERDR_LOCAL_BIN="${HOME}/.local/bin"
+        if [ -f "${HERDR_LOCAL_BIN}/herdr" ]; then
+            if ln -sf "${HERDR_LOCAL_BIN}/herdr" "/usr/local/bin/herdr"; then
+                echo "**** herdr symlinked to /usr/local/bin/herdr ****"
+            else
+                echo "**** warning: could not create /usr/local/bin/herdr symlink ****"
+                echo "**** herdr binary is available at ${HERDR_LOCAL_BIN}/herdr ****"
+            fi
+            if ln -sf "${HERDR_LOCAL_BIN}/herdr" "/usr/local/bin/hrdr"; then
+                echo "**** hrdr symlinked to /usr/local/bin/hrdr ****"
+            fi
+        fi
+    else
+        rm -f "${HERDR_INSTALL_SCRIPT}"
+        echo "**** Herdr installation failed – skipping ****"
+    fi
+fi
+
+# The installers modify ~/.local, ~/.bashrc, ~/.profile as root.
 # Restore ownership so the unprivileged container user can write to them.
+chown -R "${PUID}:${PGID}" "${HOME}/.local" 2>/dev/null || true
 chown "${PUID}:${PGID}" "${HOME}/.bashrc" "${HOME}/.profile" 2>/dev/null || true
 
 echo "**** AI CLI tools installation complete ****"

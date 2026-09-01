@@ -18,7 +18,7 @@ installs the following tools on every container start:
 
 | Tool | Package | Description |
 |---|---|---|
-| [gemini-cli](https://github.com/google-gemini/gemini-cli) | `@google/gemini-cli` | Google Gemini in your terminal |
+| [Herdr](https://herdr.dev/) | official installer | Agent runtime and multiplexer for AI coding agents (`herdr` / `hrdr` command) |
 | [Antigravity CLI](https://antigravity.google) | official installer | Go-based multi-step agentic CLI (`agy` command) |
 | [claude-code](https://github.com/anthropics/claude-code) | `@anthropic-ai/claude-code` | Anthropic Claude agentic coding CLI |
 | [openclaude](https://github.com/Gitlawb/openclaude) | `@gitlawb/openclaude` | Open-source Claude-compatible coding agent CLI |
@@ -91,7 +91,11 @@ set -g mouse on
 
 Then install `tmux-integrated` extension, if you want the UI to integrate to your CLI tools (not really necessary).
 
-### 2. Stop Copilot Chat extension from nagging you (if you use free Marketplace)
+### 2. Enable copilot extension
+- Option A: Enable Microsoft Marketplace in `code-server`
+Add to your .env
+```EXTENSIONS_GALLERY='{"serviceUrl":"https://marketplace.visualstudio.com/_apis/public/gallery","cacheUrl":"https://vscode.blob.core.windows.net/gallery/index","itemUrl":"https://marketplace.visualstudio.com/items"}'```
+- Option B: Finish setup of copilot using a script
 Using copilot-chat extension, login to github. Then run this in the browser console with `code-server` tab open, then restart the page, so the copilot-chat consider itself properly setup:
 ```js
   (async () => {
