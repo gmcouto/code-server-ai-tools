@@ -25,6 +25,7 @@ installs the following tools on every container start:
 | [Cursor Agent CLI](https://cursor.com/docs/cli/installation) | official installer | Cursor editor CLI (`cursor-agent` command) |
 | [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `@github/copilot` | GitHub Copilot in your terminal (`copilot` command) |
 | [OpenAI Codex CLI](https://github.com/openai/codex) | `@openai/codex` | OpenAI Codex local coding agent (`codex` command) |
+| [opencode](https://github.com/anomalyco/opencode) | `@opencode/cli` | Open-source AI software engineering agent CLI (`opencode` command) |
 
 > **Required** – this mod depends on **`linuxserver/mods:code-server-nvm`** and must be loaded alongside it.
 > The s6 init graph hard-depends on `init-mod-code-server-nvm-install`, so NVM and its bundled npm

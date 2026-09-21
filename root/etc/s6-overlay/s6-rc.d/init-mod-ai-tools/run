@@ -47,6 +47,12 @@ else
     # -----------------------------------------------------------------------
     echo "**** installing / updating openai codex CLI ****"
     ${NPM_BIN} install -g @openai/codex
+
+    # -----------------------------------------------------------------------
+    # opencode CLI  (https://github.com/anomalyco/opencode)
+    # -----------------------------------------------------------------------
+    echo "**** installing / updating opencode CLI ****"
+    ${NPM_BIN} install -g @opencode/cli
 fi
 
 # ---------------------------------------------------------------------------

@@ -21,7 +21,7 @@ MOD_IMAGE="code-server-ai-tools-mod:local-$$"
 TEST_IMAGE="code-server-ai-tools-test:local-$$"
 CONTAINER_NAME="code-server-validate-local-$$"
 PORT=$(( RANDOM % 10000 + 8000 ))
-STARTUP_TIMEOUT=180   # 3 minutes — npm installs are slow
+STARTUP_TIMEOUT=480   # 8 minutes — npm and binary installs take time
 POLL_INTERVAL=10
 
 PASS=0
@@ -164,6 +164,8 @@ check_fail "gh executes"                          "gh --version"
 NVM_INIT="NVM_DIR=/config/.nvm source /config/.nvm/nvm.sh"
 check_fail "claude-code binary present"  "${NVM_INIT} && command -v claude"
 check_fail "claude-code executes"        "${NVM_INIT} && claude --version"
+check_fail "opencode binary present"     "${NVM_INIT} && command -v opencode"
+check_fail "opencode executes"           "${NVM_INIT} && opencode --version"
 check_fail "herdr binary present"        "command -v herdr"
 check_fail "herdr executes"              "herdr --version"
 check_fail "hrdr binary present"         "command -v hrdr"
