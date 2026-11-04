@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGE: ghcr.io/biel-homelab/code-server-ai-tools
+  IMAGE: ghcr.io/gmcouto/code-server-ai-tools
 
 jobs:
   # Builds the published artifact (FROM scratch mod image) and pushes a

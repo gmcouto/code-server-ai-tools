@@ -35,7 +35,7 @@ installs the following tools on every container start:
 
 ## Usage
 
-Just add this repo's image, `ghcr.io/biel-homelab/code-server-ai-tools:latest`, to your container's `DOCKER_MODS` environment variable. You can do this either in your `docker run` command or in `docker-compose.yml`:
+Just add this repo's image, `ghcr.io/gmcouto/code-server-ai-tools:latest`, to your container's `DOCKER_MODS` environment variable. You can do this either in your `docker run` command or in `docker-compose.yml`:
 
 ### docker run
 
@@ -45,7 +45,7 @@ docker run -d \
   -e PUID=1000 \
   -e PGID=1000 \
   -e TZ=Etc/UTC \
-  -e DOCKER_MODS=linuxserver/mods:code-server-nvm|ghcr.io/biel-homelab/code-server-ai-tools:latest \
+  -e DOCKER_MODS=linuxserver/mods:code-server-nvm|ghcr.io/gmcouto/code-server-ai-tools:latest \
   -p 8443:8443 \
   -v /path/to/config:/config \
   --restart unless-stopped \
@@ -63,7 +63,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
-      - DOCKER_MODS=linuxserver/mods:code-server-nvm|ghcr.io/biel-homelab/code-server-ai-tools:latest
+      - DOCKER_MODS=linuxserver/mods:code-server-nvm|ghcr.io/gmcouto/code-server-ai-tools:latest
     volumes:
       - /path/to/config:/config
     ports:
@@ -74,7 +74,7 @@ services:
 
 ## Suggestion for ENVIRONMENT values:
 ```
-DOCKER_MODS=linuxserver/mods:universal-package-install|linuxserver/mods:code-server-extension-arguments|linuxserver/mods:code-server-nodejs|linuxserver/mods:code-server-nvm|linuxserver/mods:universal-docker|linuxserver/mods:code-server-python3|linuxserver/mods:code-server-rust|linuxserver/mods:code-server-pnpm|linuxserver/mods:code-server-golang|ghcr.io/biel-homelab/code-server-ai-tools:latest
+DOCKER_MODS=linuxserver/mods:universal-package-install|linuxserver/mods:code-server-extension-arguments|linuxserver/mods:code-server-nodejs|linuxserver/mods:code-server-nvm|linuxserver/mods:universal-docker|linuxserver/mods:code-server-python3|linuxserver/mods:code-server-rust|linuxserver/mods:code-server-pnpm|linuxserver/mods:code-server-golang|ghcr.io/gmcouto/code-server-ai-tools:latest
 INSTALL_PACKAGES=pkg-config|libssl-dev|libglib2.0-dev|libgdk-pixbuf-2.0-dev|libpango1.0-dev|libatk1.0-dev|libgtk-3-dev|libjavascriptcoregtk-4.1-dev|libsoup-3.0-dev|libwebkit2gtk-4.1-dev
 EXTENSIONS_GALLERY='{"serviceUrl":"https://marketplace.visualstudio.com/_apis/public/gallery","cacheUrl":"https://vscode.blob.core.windows.net/gallery/index","itemUrl":"https://marketplace.visualstudio.com/items"}'
 NODEJS_MOD_VERSION=24
