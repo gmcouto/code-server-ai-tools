@@ -28,7 +28,7 @@ else
     # claude-code  (https://github.com/anthropics/claude-code)
     # -----------------------------------------------------------------------
     echo "**** installing / updating claude-code ****"
-    ${NPM_BIN} install -g @anthropic-ai/claude-code
+    ${NPM_BIN} install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code
 
     # -----------------------------------------------------------------------
     # openclaude  (https://github.com/Gitlawb/openclaude)
@@ -52,7 +52,7 @@ else
     # opencode CLI  (https://github.com/anomalyco/opencode)
     # -----------------------------------------------------------------------
     echo "**** installing / updating opencode CLI ****"
-    ${NPM_BIN} install -g @opencode/cli
+    ${NPM_BIN} install -g --allow-scripts=@opencode/cli @opencode/cli
 fi
 
 # ---------------------------------------------------------------------------
